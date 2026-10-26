@@ -1,6 +1,6 @@
 <template>
   <TheContent>
-    <div class="p-4" data-test="specificationFrameworkDetail">
+    <div class="p-4 text-left" data-test="specificationFrameworkDetail">
       <PrimeButton
         variant="text"
         icon="pi pi-arrow-left"
@@ -14,14 +14,14 @@
       </p>
 
       <div class="flex flex-column lg:flex-row gap-4">
-        <div class="flex-1" style="min-width: 0">
+        <div class="specification-tree-column">
           <SpecificationFrameworkTree
             :framework-id="frameworkId"
             :selected-path="selectedPath"
             @select-path="onSelectPath"
           />
         </div>
-        <div class="flex-1" style="min-width: 0" data-test="specificationDetailColumn">
+        <div class="specification-detail-column" data-test="specificationDetailColumn">
           <SpecificationDataPointDetail
             v-if="selectedPath && dataPointTypeId"
             :data-point-type-id="dataPointTypeId"
@@ -86,3 +86,27 @@ function goBackToOverview(): void {
   void router.push({ name: 'Specifications Overview' });
 }
 </script>
+
+<style scoped>
+.specification-tree-column {
+  flex: 2 1 0;
+  min-width: 0;
+  max-height: 75vh;
+  overflow: auto;
+}
+
+.specification-detail-column {
+  flex: 3 1 0;
+  min-width: 0;
+}
+
+@media (min-width: 992px) {
+  .specification-detail-column {
+    position: sticky;
+    top: var(--spacing-md);
+    align-self: flex-start;
+    max-height: 90vh;
+    overflow: auto;
+  }
+}
+</style>

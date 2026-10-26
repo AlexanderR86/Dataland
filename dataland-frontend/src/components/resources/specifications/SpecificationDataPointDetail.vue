@@ -1,5 +1,5 @@
 <template>
-  <div data-test="specificationDataPointDetail">
+  <div class="text-left" data-test="specificationDataPointDetail">
     <div v-if="isPending" class="d-center-div text-center px-7 py-4" data-test="specificationDataPointLoading">
       <p class="font-medium text-xl">Loading...</p>
       <DatalandProgressSpinner />
@@ -16,39 +16,78 @@
     </div>
 
     <template v-else-if="dataPointType">
-      <h2 class="mb-1" data-test="specificationDataPointName">{{ dataPointType.name }}</h2>
-      <p class="text-sm mb-3">ID: {{ dataPointType.dataPointType.id }}</p>
+      <Card data-test="specificationDataPointCard">
+        <template #subtitle>
+          <span v-if="breadcrumb" data-test="specificationDataPointBreadcrumb">{{ breadcrumb }}</span>
+        </template>
+        <template #title>
+          <span data-test="specificationDataPointName">{{ dataPointType.name }}</span>
+        </template>
+        <template #content>
+          <dl class="specification-facts">
+            <dt>ID</dt>
+            <dd>
+              <code>{{ dataPointType.dataPointType.id }}</code>
+            </dd>
 
-      <h3 class="mb-1">Definition</h3>
-      <p class="mb-3" style="white-space: pre-line" data-test="specificationDataPointDefinition">
-        {{ dataPointType.businessDefinition }}
-      </p>
+            <dt>Definition</dt>
+            <dd style="white-space: pre-line" data-test="specificationDataPointDefinition">
+              {{ dataPointType.businessDefinition }}
+            </dd>
 
-      <h3 class="mb-1">Frameworks</h3>
-      <ul v-if="dataPointType.usedBy.length > 0" class="mt-0 mb-3" data-test="specificationDataPointFrameworks">
-        <li v-for="usedByFramework in dataPointType.usedBy" :key="usedByFramework.id">
-          <RouterLink :to="{ name: 'Specifications Framework Detail', params: { frameworkId: usedByFramework.id } }">
-            {{ getFrameworkLabel(usedByFramework.id) }}
-          </RouterLink>
-        </li>
-      </ul>
-      <p v-else class="mb-3">None</p>
+            <dt>Frameworks</dt>
+            <dd>
+              <div
+                v-if="dataPointType.usedBy.length > 0"
+                class="flex flex-wrap gap-2"
+                data-test="specificationDataPointFrameworks"
+              >
+                <RouterLink
+                  v-for="usedByFramework in dataPointType.usedBy"
+                  :key="usedByFramework.id"
+                  :to="{ name: 'Specifications Framework Detail', params: { frameworkId: usedByFramework.id } }"
+                  style="text-decoration: none"
+                >
+                  <Tag :value="getFrameworkLabel(usedByFramework.id)" severity="secondary" />
+                </RouterLink>
+              </div>
+              <span v-else>None</span>
+            </dd>
 
-      <h3 class="mb-1">Constraints</h3>
-      <ul v-if="constraints.length > 0" class="mt-0 mb-3" data-test="specificationDataPointConstraints">
-        <li v-for="constraint in constraints" :key="constraint">
-          <code>{{ constraint }}</code>
-        </li>
-      </ul>
-      <p v-else class="mb-3">None</p>
+            <dt>Constraints</dt>
+            <dd>
+              <div
+                v-if="constraints.length > 0"
+                class="flex flex-wrap gap-2"
+                data-test="specificationDataPointConstraints"
+              >
+                <Tag v-for="constraint in constraints" :key="constraint" :value="constraint" severity="secondary" />
+              </div>
+              <span v-else>None</span>
+            </dd>
 
-      <h3 class="mb-1">Calculation rules</h3>
-      <ul v-if="dataPointType.calculationRules.length > 0" class="mt-0 mb-3" data-test="specificationDataPointRules">
-        <li v-for="(rule, index) in dataPointType.calculationRules" :key="index">
-          {{ rule.calculationMethod }} (inputs: {{ rule.inputs.join(', ') }})
-        </li>
-      </ul>
-      <p v-else class="mb-3">None</p>
+            <dt>Calculation rules</dt>
+            <dd>
+              <ul
+                v-if="dataPointType.calculationRules.length > 0"
+                class="m-0 pl-3"
+                data-test="specificationDataPointRules"
+              >
+                <li v-for="(rule, index) in dataPointType.calculationRules" :key="index">
+                  <strong>{{ rule.calculationMethod }}</strong>
+                  <span v-if="rule.inputs.length > 0">
+                    , inputs:
+                    <code v-for="(input, inputIndex) in rule.inputs" :key="input">
+                      {{ input }}<template v-if="inputIndex < rule.inputs.length - 1">, </template>
+                    </code>
+                  </span>
+                </li>
+              </ul>
+              <span v-else>None</span>
+            </dd>
+          </dl>
+        </template>
+      </Card>
 
       <SpecificationBaseTypeDetail
         :data-point-base-type-id="dataPointType.dataPointBaseType.id"
@@ -62,7 +101,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
+import Card from 'primevue/card';
 import PrimeButton from 'primevue/button';
+import Tag from 'primevue/tag';
 import DatalandProgressSpinner from '@/components/general/DatalandProgressSpinner.vue';
 import SpecificationBaseTypeDetail from '@/components/resources/specifications/SpecificationBaseTypeDetail.vue';
 import { useGetSpecificationDataPointTypeByIdQuery } from '@/api-queries/specification-service/data-point-type/useGetSpecificationDataPointTypeByIdQuery';
@@ -88,6 +129,7 @@ const frameworkNamesById = computed(
   () => new Map((frameworks.value ?? []).map((framework) => [framework.framework.id, framework.name]))
 );
 const constraints = computed(() => dataPointType.value?.constraints ?? []);
+const breadcrumb = computed(() => props.path.split('.').slice(0, -1).join(' › '));
 
 /**
  * Resolves the display name of a framework and falls back to its id if the name is not available.
@@ -96,3 +138,24 @@ function getFrameworkLabel(frameworkId: string): string {
   return frameworkNamesById.value.get(frameworkId) ?? frameworkId;
 }
 </script>
+
+<style scoped>
+.specification-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--spacing-xs) var(--spacing-md);
+  margin: 0;
+  text-align: left;
+}
+
+.specification-facts dt {
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  font-size: var(--font-size-sm);
+}
+
+.specification-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+</style>

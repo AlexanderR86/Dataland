@@ -1,6 +1,6 @@
 <template>
   <TheContent>
-    <div class="p-4" data-test="specificationsOverview">
+    <div class="p-4 text-left" data-test="specificationsOverview">
       <h1 class="mb-2">Specifications</h1>
 
       <div v-if="isPending" class="d-center-div text-center px-7 py-4" data-test="specificationsLoading">
