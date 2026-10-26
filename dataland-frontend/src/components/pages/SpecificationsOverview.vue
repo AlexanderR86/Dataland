@@ -26,7 +26,7 @@
         <Column header="NAME" field="name">
           <template #body="{ data: framework }">
             <RouterLink
-              :to="getDetailPath(framework)"
+              :to="getDetailLocation(framework)"
               :data-test="`specificationFrameworkLink-${framework.framework.id}`"
               @click.stop
             >
@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
+import { RouterLink, useRouter, type RouteLocationRaw } from 'vue-router';
 import PrimeButton from 'primevue/button';
 import Column from 'primevue/column';
 import DataTable, { type DataTableRowClickEvent } from 'primevue/datatable';
@@ -65,16 +65,16 @@ const { data, isPending, isError, error, refetch } = useListSpecificationFramewo
 const frameworks = computed(() => data.value ?? []);
 
 /**
- * Builds the path to the detail page of a framework specification.
+ * Builds the named route location of the detail page of a framework specification.
  */
-function getDetailPath(framework: SimpleFrameworkSpecification): string {
-  return `/specifications/${framework.framework.id}`;
+function getDetailLocation(framework: SimpleFrameworkSpecification): RouteLocationRaw {
+  return { name: 'Specifications Framework Detail', params: { frameworkId: framework.framework.id } };
 }
 
 /**
  * Opens the detail page of the clicked framework specification.
  */
 function onRowClick(event: DataTableRowClickEvent): void {
-  void router.push({ path: getDetailPath(event.data as SimpleFrameworkSpecification) });
+  void router.push(getDetailLocation(event.data as SimpleFrameworkSpecification));
 }
 </script>

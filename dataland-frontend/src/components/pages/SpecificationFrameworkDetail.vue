@@ -29,6 +29,6 @@ const frameworkId = computed(() => String(route.params.frameworkId));
  * Navigates back to the overview of all framework specifications.
  */
 function goBackToOverview(): void {
-  void router.push({ path: '/specifications' });
+  void router.push({ name: 'Specifications Overview' });
 }
 </script>

@@ -216,7 +216,7 @@ const routes = [
     },
   },
   {
-    path: '/specifications',
+    path: '/framework-specifications',
     name: 'Specifications Overview',
     component: SpecificationsOverview,
     meta: {
@@ -225,7 +225,7 @@ const routes = [
     },
   },
   {
-    path: '/specifications/:frameworkId',
+    path: '/framework-specifications/:frameworkId',
     name: 'Specifications Framework Detail',
     component: SpecificationFrameworkDetail,
     meta: {

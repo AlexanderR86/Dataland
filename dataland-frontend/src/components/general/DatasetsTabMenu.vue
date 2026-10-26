@@ -54,7 +54,7 @@ const tabs = ref<Array<TabInfo>>([
   { id: 'qa', label: 'QA', route: '/qualityassurance', isVisible: false },
   { id: 'my-data-requests', label: 'MY DATA REQUESTS', route: '/requests', isVisible: true },
   { id: 'all-data-requests', label: 'ALL DATA REQUESTS', route: '/requestoverview', isVisible: false },
-  { id: 'specifications', label: 'SPECIFICATIONS', route: '/specifications', isVisible: true },
+  { id: 'specifications', label: 'SPECIFICATIONS', route: '/framework-specifications', isVisible: true },
 ]);
 
 const visibleTabs = computed(() => tabs.value.filter((tab) => tab.isVisible || tab.id === currentTabId.value));
