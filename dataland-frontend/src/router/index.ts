@@ -15,6 +15,7 @@ const MyDataRequestsOverview = (): Promise<RouteComponent> => import('@/componen
 
 const PortfolioOverview = (): Promise<RouteComponent> => import('@/components/pages/PortfolioOverview.vue');
 const SharedPortfolioOverview = (): Promise<RouteComponent> => import('@/components/pages/SharedPortfolioOverview.vue');
+const SpecificationsOverview = (): Promise<RouteComponent> => import('@/components/pages/SpecificationsOverview.vue');
 const ViewDataRequestPage = (): Promise<RouteComponent> => import('@/components/pages/ViewDataRequestPage.vue');
 
 const UnsubscribeFromMailsPage = (): Promise<RouteComponent> =>
@@ -209,6 +210,15 @@ const routes = [
     component: SharedPortfolioOverview,
     meta: {
       initialTabId: 'shared-portfolios',
+      requiresAuthentication: true,
+    },
+  },
+  {
+    path: '/specifications',
+    name: 'Specifications Overview',
+    component: SpecificationsOverview,
+    meta: {
+      initialTabId: 'specifications',
       requiresAuthentication: true,
     },
   },
