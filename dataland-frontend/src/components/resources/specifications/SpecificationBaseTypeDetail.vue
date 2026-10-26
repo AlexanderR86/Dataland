@@ -33,7 +33,7 @@
           </dd>
         </dl>
 
-        <Panel header="SCHEMA" toggleable class="mb-3" data-test="specificationSchemaPanel">
+        <Panel header="SCHEMA" toggleable collapsed class="mb-3" data-test="specificationSchemaPanel">
           <div v-if="isSchemaPending" class="text-center" data-test="specificationSchemaLoading">
             <p class="font-medium">Loading...</p>
             <DatalandProgressSpinner />
@@ -51,7 +51,7 @@
           <p v-else class="m-0" data-test="specificationSchemaMissing">No schema is available for this field.</p>
         </Panel>
 
-        <Panel header="EXAMPLE" toggleable data-test="specificationExamplePanel">
+        <Panel header="EXAMPLE" toggleable collapsed data-test="specificationExamplePanel">
           <SpecificationJsonView :value="baseType.example" data-test="specificationExample" />
         </Panel>
       </template>

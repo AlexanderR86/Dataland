@@ -65,29 +65,16 @@
               </div>
               <span v-else>None</span>
             </dd>
-
-            <dt>Calculation rules</dt>
-            <dd>
-              <ul
-                v-if="dataPointType.calculationRules.length > 0"
-                class="m-0 pl-3"
-                data-test="specificationDataPointRules"
-              >
-                <li v-for="(rule, index) in dataPointType.calculationRules" :key="index">
-                  <strong>{{ rule.calculationMethod }}</strong>
-                  <span v-if="rule.inputs.length > 0">
-                    , inputs:
-                    <code v-for="(input, inputIndex) in rule.inputs" :key="input">
-                      {{ input }}<template v-if="inputIndex < rule.inputs.length - 1">, </template>
-                    </code>
-                  </span>
-                </li>
-              </ul>
-              <span v-else>None</span>
-            </dd>
           </dl>
         </template>
       </Card>
+
+      <SpecificationCalculationRules
+        v-if="dataPointType.calculationRules.length > 0"
+        class="mt-4"
+        :rules="dataPointType.calculationRules"
+      />
+      <p v-else class="mt-4 mb-0" data-test="specificationNoCalculationRules">Calculation rules: None</p>
 
       <SpecificationBaseTypeDetail
         :data-point-base-type-id="dataPointType.dataPointBaseType.id"
@@ -105,6 +92,7 @@ import Card from 'primevue/card';
 import PrimeButton from 'primevue/button';
 import Tag from 'primevue/tag';
 import DatalandProgressSpinner from '@/components/general/DatalandProgressSpinner.vue';
+import SpecificationCalculationRules from '@/components/resources/specifications/SpecificationCalculationRules.vue';
 import SpecificationBaseTypeDetail from '@/components/resources/specifications/SpecificationBaseTypeDetail.vue';
 import { useGetSpecificationDataPointTypeByIdQuery } from '@/api-queries/specification-service/data-point-type/useGetSpecificationDataPointTypeByIdQuery';
 import { useListSpecificationFrameworksQuery } from '@/api-queries/specification-service/framework/useListSpecificationFrameworksQuery';

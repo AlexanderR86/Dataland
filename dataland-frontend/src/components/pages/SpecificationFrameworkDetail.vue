@@ -13,7 +13,7 @@
         {{ framework.businessDefinition }}
       </p>
 
-      <div class="flex flex-column lg:flex-row gap-4">
+      <div class="specification-columns">
         <div class="specification-tree-column">
           <SpecificationFrameworkTree
             :framework-id="frameworkId"
@@ -21,7 +21,7 @@
             @select-path="onSelectPath"
           />
         </div>
-        <div class="specification-detail-column" data-test="specificationDetailColumn">
+        <div ref="detailColumn" class="specification-detail-column" data-test="specificationDetailColumn">
           <SpecificationDataPointDetail
             v-if="selectedPath && dataPointTypeId"
             :data-point-type-id="dataPointTypeId"
@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PrimeButton from 'primevue/button';
 import TheContent from '@/components/generics/TheContent.vue';
@@ -53,6 +53,9 @@ import { parseFrameworkSchema } from '@/utils/specifications/SpecificationTreeUt
 
 const route = useRoute();
 const router = useRouter();
+
+const detailColumn = ref<HTMLElement | null>(null);
+const NARROW_VIEWPORT_QUERY = '(max-width: 991px)';
 
 const frameworkId = computed(() => String(route.params.frameworkId));
 const selectedPath = computed(() => (typeof route.query.field === 'string' ? route.query.field : undefined));
@@ -77,6 +80,9 @@ function onSelectPath(path: string | undefined): void {
     params: { frameworkId: frameworkId.value },
     query: path ? { field: path } : {},
   });
+  if (path && window.matchMedia(NARROW_VIEWPORT_QUERY).matches) {
+    void nextTick(() => detailColumn.value?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }
 }
 
 /**
@@ -88,20 +94,35 @@ function goBackToOverview(): void {
 </script>
 
 <style scoped>
+.specification-columns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
 .specification-tree-column {
-  flex: 2 1 0;
   min-width: 0;
-  max-height: 75vh;
+  max-height: 40vh;
   overflow: auto;
 }
 
 .specification-detail-column {
-  flex: 3 1 0;
   min-width: 0;
+  scroll-margin-top: var(--spacing-md);
 }
 
 @media (min-width: 992px) {
+  .specification-columns {
+    flex-direction: row;
+  }
+
+  .specification-tree-column {
+    flex: 2 1 0;
+    max-height: 75vh;
+  }
+
   .specification-detail-column {
+    flex: 3 1 0;
     position: sticky;
     top: var(--spacing-md);
     align-self: flex-start;
