@@ -5,7 +5,7 @@ export interface SpecificationLeafData {
   aliasExport: string | null;
 }
 
-type SchemaObject = { [key: string]: unknown };
+export type SchemaObject = { [key: string]: unknown };
 
 /**
  * Parses the schema string of a framework specification into an object.
@@ -45,14 +45,14 @@ export function collectExpandableKeys(nodes: TreeNode[]): string[] {
 /**
  * Checks if a value is a plain JSON object.
  */
-function isSchemaObject(value: unknown): value is SchemaObject {
+export function isSchemaObject(value: unknown): value is SchemaObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
  * Checks if a schema node is a data point reference, i.e. a leaf of the schema.
  */
-function isDataPointReference(value: SchemaObject): boolean {
+export function isDataPointReference(value: SchemaObject): boolean {
   return typeof value.id === 'string' && typeof value.ref === 'string';
 }
 

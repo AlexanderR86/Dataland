@@ -38,18 +38,19 @@
     </div>
     <Tree
       v-model:expanded-keys="expandedKeys"
-      v-model:selection-keys="selectedKeys"
+      :selection-keys="selectedKeys"
       :value="nodes"
       selection-mode="single"
       @node-select="onNodeSelect"
+      @node-unselect="emit('select-path', undefined)"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import PrimeButton from 'primevue/button';
-import Tree, { type TreeExpandedKeys, type TreeSelectionKeys } from 'primevue/tree';
+import Tree, { type TreeExpandedKeys } from 'primevue/tree';
 import type { TreeNode } from 'primevue/treenode';
 import DatalandProgressSpinner from '@/components/general/DatalandProgressSpinner.vue';
 import { useGetSpecificationFrameworkByIdQuery } from '@/api-queries/specification-service/framework/useGetSpecificationFrameworkByIdQuery';
@@ -57,15 +58,16 @@ import {
   buildSpecificationTree,
   collectExpandableKeys,
   parseFrameworkSchema,
-  type SpecificationLeafData,
 } from '@/utils/specifications/SpecificationTreeUtils';
+import { getAncestorKeys } from '@/utils/specifications/SpecificationDetailUtils';
 
 const props = defineProps<{
   frameworkId: string;
+  selectedPath?: string;
 }>();
 
 const emit = defineEmits<{
-  (event: 'select-data-point', dataPointTypeId: string): void;
+  (event: 'select-path', path: string | undefined): void;
 }>();
 
 const { data, isPending, isError, error, refetch } = useGetSpecificationFrameworkByIdQuery({
@@ -73,7 +75,18 @@ const { data, isPending, isError, error, refetch } = useGetSpecificationFramewor
 });
 
 const expandedKeys = ref<TreeExpandedKeys>({});
-const selectedKeys = ref<TreeSelectionKeys>({});
+const selectedKeys = computed(() => (props.selectedPath ? { [props.selectedPath]: true } : {}));
+
+watch(
+  () => props.selectedPath,
+  (path) => {
+    if (path) {
+      const ancestors = Object.fromEntries(getAncestorKeys(path).map((key) => [key, true]));
+      expandedKeys.value = { ...expandedKeys.value, ...ancestors };
+    }
+  },
+  { immediate: true }
+);
 
 const parsedTree = computed<{ nodes: TreeNode[]; errorMessage: string | null }>(() => {
   if (!data.value) return { nodes: [], errorMessage: null };
@@ -102,11 +115,11 @@ function collapseAll(): void {
 }
 
 /**
- * Emits the id of the data point type of the selected leaf.
+ * Emits the path of the selected leaf.
  */
 function onNodeSelect(node: TreeNode): void {
   if (node.leaf) {
-    emit('select-data-point', (node.data as SpecificationLeafData).dataPointTypeId);
+    emit('select-path', node.key);
   }
 }
 </script>
