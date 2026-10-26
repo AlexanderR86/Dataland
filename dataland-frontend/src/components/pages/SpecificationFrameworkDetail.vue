@@ -8,8 +8,11 @@
         data-test="specificationsBackButton"
         @click="goBackToOverview"
       />
-      <h1 class="mb-2">Framework {{ frameworkId }}</h1>
-      <p>Placeholder: the schema of this framework will be shown here.</p>
+      <h1 class="mb-2" data-test="specificationFrameworkName">{{ framework?.name ?? frameworkId }}</h1>
+      <p v-if="framework" class="mb-4" data-test="specificationFrameworkDefinition">
+        {{ framework.businessDefinition }}
+      </p>
+      <SpecificationFrameworkTree :framework-id="frameworkId" />
     </div>
   </TheContent>
 </template>
@@ -19,11 +22,14 @@ import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PrimeButton from 'primevue/button';
 import TheContent from '@/components/generics/TheContent.vue';
+import SpecificationFrameworkTree from '@/components/resources/specifications/SpecificationFrameworkTree.vue';
+import { useGetSpecificationFrameworkByIdQuery } from '@/api-queries/specification-service/framework/useGetSpecificationFrameworkByIdQuery';
 
 const route = useRoute();
 const router = useRouter();
 
 const frameworkId = computed(() => String(route.params.frameworkId));
+const { data: framework } = useGetSpecificationFrameworkByIdQuery({ frameworkId });
 
 /**
  * Navigates back to the overview of all framework specifications.
