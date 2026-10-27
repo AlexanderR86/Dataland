@@ -6,15 +6,17 @@ import {
 } from '@clients/specificationservice';
 
 export const FRAMEWORK_ID = 'pcaf';
+export const SECOND_FRAMEWORK_ID = 'sfdr';
 export const FISCAL_YEAR_DEVIATION_PATH = 'general.general.fiscalYearDeviation';
 export const FISCAL_YEAR_DEVIATION_TYPE_ID = 'extendedEnumFiscalYearDeviation';
 export const FISCAL_YEAR_END_PATH = 'general.general.fiscalYearEnd';
+export const SECOND_FRAMEWORK_FISCAL_YEAR_END_PATH = 'general.company.fiscalYearEnd';
 export const FISCAL_YEAR_END_TYPE_ID = 'extendedDateFiscalYearEnd';
 export const MAIN_PCAF_SECTOR_PATH = 'general.company.mainPcafSector';
 
 export const mockFrameworkList: SimpleFrameworkSpecification[] = [
   { framework: { id: FRAMEWORK_ID, ref: 'ref-pcaf' }, name: 'PCAF' },
-  { framework: { id: 'sfdr', ref: 'ref-sfdr' }, name: 'SFDR' },
+  { framework: { id: SECOND_FRAMEWORK_ID, ref: 'ref-sfdr' }, name: 'SFDR' },
 ];
 
 export const mockDatasetFrameworkList: SimpleFrameworkSpecification[] = [
@@ -37,7 +39,7 @@ const mockSchema = {
       fiscalYearEnd: { id: FISCAL_YEAR_END_TYPE_ID, ref: 'ref-end' },
     },
     company: {
-      mainPcafSector: { id: 'extendedEnumMainPcafSector', ref: 'ref-sector' },
+      mainPcafSector: { id: 'extendedEnumPcafMainSector', ref: 'ref-sector' },
     },
   },
 };
@@ -47,6 +49,22 @@ export const mockFramework: FrameworkSpecification = {
   name: 'PCAF',
   businessDefinition: 'The Partnership for Carbon Accounting Financials framework.',
   schema: JSON.stringify(mockSchema),
+};
+
+const mockSfdrSchema = {
+  general: {
+    company: {
+      fiscalYearEnd: { id: FISCAL_YEAR_END_TYPE_ID, ref: 'ref-end' },
+      mainPcafSector: { id: 'extendedEnumSfdrMainPcafSector', ref: 'ref-sfdr-sector' },
+    },
+  },
+};
+
+export const mockSecondFramework: FrameworkSpecification = {
+  framework: { id: SECOND_FRAMEWORK_ID, ref: 'ref-sfdr' },
+  name: 'SFDR',
+  businessDefinition: 'Sustainable Finance Disclosure Regulation framework.',
+  schema: JSON.stringify(mockSfdrSchema),
 };
 
 export const mockFiscalYearDeviationType: DataPointTypeSpecification = {
@@ -66,6 +84,10 @@ export const mockTypeWithoutRules: DataPointTypeSpecification = {
   ...mockFiscalYearDeviationType,
   dataPointType: { id: FISCAL_YEAR_END_TYPE_ID, ref: 'ref-end' },
   name: 'Fiscal Year End Type Name',
+  usedBy: [
+    { id: FRAMEWORK_ID, ref: 'ref-pcaf' },
+    { id: SECOND_FRAMEWORK_ID, ref: 'ref-sfdr' },
+  ],
   constraints: null,
   calculationRules: [],
 };
