@@ -1,4 +1,5 @@
 import type { TreeNode } from 'primevue/treenode';
+import { convertCamelCaseToSentenceCase } from '@/utils/StringFormatter';
 
 export interface SpecificationLeafData {
   dataPointTypeId: string;
@@ -43,6 +44,25 @@ export function collectExpandableKeys(nodes: TreeNode[]): string[] {
 }
 
 /**
+ * Converts a camelCase schema key into a readable name, e.g. "fiscalYearDeviation" becomes "Fiscal Year Deviation".
+ * @param key the schema key
+ * @returns the readable name
+ */
+export function formatSchemaKey(key: string): string {
+  return convertCamelCaseToSentenceCase(key);
+}
+
+/**
+ * Converts a dot-separated schema path into readable names joined by a separator.
+ * @param path the dot-separated path
+ * @param separator the separator between the names
+ * @returns the readable path
+ */
+export function formatSchemaPath(path: string, separator = ' › '): string {
+  return path.split('.').map(formatSchemaKey).join(separator);
+}
+
+/**
  * Checks if a value is a plain JSON object.
  */
 export function isSchemaObject(value: unknown): value is SchemaObject {
@@ -69,9 +89,9 @@ function buildNodes(schema: SchemaObject, parentPath: string): TreeNode[] {
         dataPointTypeId: value.id as string,
         aliasExport: typeof value.aliasExport === 'string' ? value.aliasExport : null,
       };
-      nodes.push({ key: path, label: key, leaf: true, selectable: true, data });
+      nodes.push({ key: path, label: formatSchemaKey(key), leaf: true, selectable: true, data });
     } else {
-      nodes.push({ key: path, label: key, selectable: false, children: buildNodes(value, path) });
+      nodes.push({ key: path, label: formatSchemaKey(key), selectable: false, children: buildNodes(value, path) });
     }
   }
   return nodes;

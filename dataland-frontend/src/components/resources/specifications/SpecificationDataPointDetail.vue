@@ -21,7 +21,7 @@
           <span v-if="breadcrumb" data-test="specificationDataPointBreadcrumb">{{ breadcrumb }}</span>
         </template>
         <template #title>
-          <span data-test="specificationDataPointName">{{ dataPointType.name }}</span>
+          <span data-test="specificationDataPointName">{{ fieldName }}</span>
         </template>
         <template #content>
           <dl class="specification-facts">
@@ -29,6 +29,9 @@
             <dd>
               <code>{{ dataPointType.dataPointType.id }}</code>
             </dd>
+
+            <dt>Data point type</dt>
+            <dd data-test="specificationDataPointTypeName">{{ dataPointType.name }}</dd>
 
             <dt>Definition</dt>
             <dd style="white-space: pre-line" data-test="specificationDataPointDefinition">
@@ -94,6 +97,7 @@ import Tag from 'primevue/tag';
 import DatalandProgressSpinner from '@/components/general/DatalandProgressSpinner.vue';
 import SpecificationCalculationRules from '@/components/resources/specifications/SpecificationCalculationRules.vue';
 import SpecificationBaseTypeDetail from '@/components/resources/specifications/SpecificationBaseTypeDetail.vue';
+import { formatSchemaKey, formatSchemaPath } from '@/utils/specifications/SpecificationTreeUtils';
 import { useGetSpecificationDataPointTypeByIdQuery } from '@/api-queries/specification-service/data-point-type/useGetSpecificationDataPointTypeByIdQuery';
 import { useListSpecificationFrameworksQuery } from '@/api-queries/specification-service/framework/useListSpecificationFrameworksQuery';
 
@@ -117,7 +121,8 @@ const frameworkNamesById = computed(
   () => new Map((frameworks.value ?? []).map((framework) => [framework.framework.id, framework.name]))
 );
 const constraints = computed(() => dataPointType.value?.constraints ?? []);
-const breadcrumb = computed(() => props.path.split('.').slice(0, -1).join(' › '));
+const breadcrumb = computed(() => formatSchemaPath(props.path.split('.').slice(0, -1).join('.')));
+const fieldName = computed(() => formatSchemaKey(props.path.split('.').at(-1) ?? props.path));
 
 /**
  * Resolves the display name of a framework and falls back to its id if the name is not available.

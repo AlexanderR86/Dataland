@@ -45,7 +45,7 @@ export function convertKebabCaseToPascalCase(rawText: string): string {
  * @param rawText is the string to be converted to a human-readable string
  * @returns the converted string in "sentence-case"
  */
-function convertCamelCaseToSentenceCase(rawText: string): string {
+export function convertCamelCaseToSentenceCase(rawText: string): string {
   // Split the sting to words
   const processedText = rawText.replaceAll(/((?!^)[A-Z])/g, ' $1');
   // uppercase the first letter of the first word
