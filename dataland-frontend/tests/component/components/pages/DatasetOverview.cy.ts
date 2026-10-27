@@ -3,6 +3,10 @@ import { KEYCLOAK_ROLE_UPLOADER, KEYCLOAK_ROLE_USER } from '@/utils/KeycloakRole
 import { minimalKeycloakMock } from '@ct/testUtils/Keycloak';
 
 describe('Component tests for the DatasetOverview page', () => {
+  beforeEach(() => {
+    cy.intercept('GET', '**/specifications/frameworks', []);
+  });
+
   it('Should not display the New Dataset button to non-uploader users', () => {
     const keycloakMock = minimalKeycloakMock({});
     cy.intercept('**/api/users/**', []);

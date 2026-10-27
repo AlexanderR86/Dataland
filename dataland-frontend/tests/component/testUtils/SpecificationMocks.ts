@@ -17,6 +17,15 @@ export const mockFrameworkList: SimpleFrameworkSpecification[] = [
   { framework: { id: 'sfdr', ref: 'ref-sfdr' }, name: 'SFDR' },
 ];
 
+export const mockDatasetFrameworkList: SimpleFrameworkSpecification[] = [
+  ...mockFrameworkList,
+  { framework: { id: 'eutaxonomy-financials', ref: 'ref-financials' }, name: 'EU Taxonomy Financials' },
+  {
+    framework: { id: 'eutaxonomy-financials-2026-73', ref: 'ref-financials-2026-73' },
+    name: 'EU Taxonomy Financials (2026/73)',
+  },
+];
+
 const mockSchema = {
   general: {
     general: {
