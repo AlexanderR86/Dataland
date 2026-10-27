@@ -67,6 +67,7 @@ export function mountMLDTFrameworkPanel<FrameworkDataType>(
   reviewMode = false
 ): Cypress.Chainable {
   cy.intercept(`/api/data/${frameworkIdentifier}/companies/${companyId}`, datasetsToDisplay);
+  cy.intercept('GET', '**/specifications/frameworks', []);
   return getMountingFunction({
     keycloak: minimalKeycloakMock(),
     dialogOptions: {
