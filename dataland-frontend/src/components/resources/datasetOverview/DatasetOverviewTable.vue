@@ -18,7 +18,7 @@
       <Column field="companyName" header="COMPANY" :sortable="true" class="w-3 data-test-company-name"></Column>
       <Column field="dataType" header="DATA FRAMEWORK" :sortable="true" sortField="dataType" class="w-3">
         <template #body="{ data }">
-          {{ humanizeString(data.dataType) }}
+          <SpecificationFrameworkLink :data-type="data.dataType" :label="humanizeString(data.dataType)" />
         </template>
       </Column>
       <Column field="dataReportingPeriod" header="REPORTING PERIOD" :sortable="true"></Column>
@@ -81,6 +81,7 @@ import DatalandTag from '@/components/general/DatalandTag.vue';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import PrimeButton from 'primevue/button';
+import SpecificationFrameworkLink from '@/components/resources/specifications/SpecificationFrameworkLink.vue';
 
 export default defineComponent({
   name: 'DatasetOverviewTable',
@@ -88,6 +89,7 @@ export default defineComponent({
     this.displayedDatasetTableInfos = this.datasetTableInfos as DatasetTableInfo[];
   },
   components: {
+    SpecificationFrameworkLink,
     PrimeButton,
     IconField,
     InputIcon,
