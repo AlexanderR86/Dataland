@@ -74,14 +74,15 @@ const dataPointTypeId = computed(() => {
 /**
  * Stores the selected field in the URL so that the selection can be linked.
  */
-function onSelectPath(path: string | undefined): void {
-  void router.push({
+async function onSelectPath(path: string | undefined): Promise<void> {
+  const navigationFailure = await router.push({
     name: 'Specifications Framework Detail',
     params: { frameworkId: frameworkId.value },
     query: path ? { field: path } : {},
   });
-  if (path && window.matchMedia(NARROW_VIEWPORT_QUERY).matches) {
-    void nextTick(() => detailColumn.value?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  if (!navigationFailure && path && window.matchMedia(NARROW_VIEWPORT_QUERY).matches) {
+    await nextTick();
+    detailColumn.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 
