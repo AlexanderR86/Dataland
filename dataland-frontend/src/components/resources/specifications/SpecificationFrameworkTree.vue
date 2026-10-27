@@ -40,6 +40,10 @@
       v-model:expanded-keys="expandedKeys"
       :selection-keys="selectedKeys"
       :value="nodes"
+      filter
+      filter-mode="lenient"
+      filter-by="label,key"
+      filter-placeholder="Search fields"
       selection-mode="single"
       @node-select="onNodeSelect"
       @node-unselect="emit('select-path', undefined)"
