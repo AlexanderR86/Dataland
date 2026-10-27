@@ -43,6 +43,43 @@ export function collectExpandableKeys(nodes: TreeNode[]): string[] {
   );
 }
 
+export type SpecificationSearchMode = 'name' | 'id';
+
+/**
+ * Checks whether a leaf node matches a search query.
+ * In name mode the readable label and the raw schema key are searched, in id mode the data point type id.
+ */
+function leafMatches(node: TreeNode, query: string, mode: SpecificationSearchMode): boolean {
+  if (mode === 'id') {
+    const leafData = node.data as SpecificationLeafData | undefined;
+    return (leafData?.dataPointTypeId ?? '').toLowerCase().includes(query);
+  }
+  const rawKey =
+    String(node.key ?? '')
+      .split('.')
+      .at(-1) ?? '';
+  return (node.label ?? '').toLowerCase().includes(query) || rawKey.toLowerCase().includes(query);
+}
+
+/**
+ * Filters the specification tree. A leaf is kept if it matches, a category is kept if any descendant matches.
+ * @param nodes the tree nodes to filter
+ * @param query the search text, matched case-insensitively
+ * @param mode whether to search by name or by data point type id
+ * @returns a filtered copy of the tree, or the original nodes if the query is blank
+ */
+export function filterSpecificationTree(nodes: TreeNode[], query: string, mode: SpecificationSearchMode): TreeNode[] {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) return nodes;
+  return nodes.flatMap((node) => {
+    if (node.children) {
+      const children = filterSpecificationTree(node.children, normalizedQuery, mode);
+      return children.length > 0 ? [{ ...node, children }] : [];
+    }
+    return leafMatches(node, normalizedQuery, mode) ? [node] : [];
+  });
+}
+
 /**
  * Converts a camelCase schema key into a readable name, e.g. "fiscalYearDeviation" becomes "Fiscal Year Deviation".
  * @param key the schema key

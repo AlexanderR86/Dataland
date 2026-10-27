@@ -36,14 +36,28 @@
         @click="collapseAll"
       />
     </div>
+    <div class="flex flex-wrap align-items-center gap-2 mb-3">
+      <IconField class="flex-1">
+        <InputIcon class="pi pi-search" />
+        <InputText v-model="searchQuery" :placeholder="searchPlaceholder" fluid data-test="specificationTreeSearch" />
+      </IconField>
+      <SelectButton
+        v-model="searchMode"
+        :options="searchModeOptions"
+        option-label="label"
+        option-value="value"
+        :allow-empty="false"
+        data-test="specificationTreeSearchMode"
+      />
+    </div>
+    <div v-if="displayedNodes.length === 0" class="py-3" data-test="specificationTreeNoMatches">
+      No fields match your search.
+    </div>
     <Tree
+      v-else
       v-model:expanded-keys="expandedKeys"
       :selection-keys="selectedKeys"
-      :value="nodes"
-      filter
-      filter-mode="lenient"
-      filter-by="label,key"
-      filter-placeholder="Search fields"
+      :value="displayedNodes"
       selection-mode="single"
       @node-select="onNodeSelect"
       @node-unselect="emit('select-path', undefined)"
@@ -54,6 +68,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import PrimeButton from 'primevue/button';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import InputText from 'primevue/inputtext';
+import SelectButton from 'primevue/selectbutton';
 import Tree, { type TreeExpandedKeys } from 'primevue/tree';
 import type { TreeNode } from 'primevue/treenode';
 import DatalandProgressSpinner from '@/components/general/DatalandProgressSpinner.vue';
@@ -61,7 +79,9 @@ import { useGetSpecificationFrameworkByIdQuery } from '@/api-queries/specificati
 import {
   buildSpecificationTree,
   collectExpandableKeys,
+  filterSpecificationTree,
   parseFrameworkSchema,
+  type SpecificationSearchMode,
 } from '@/utils/specifications/SpecificationTreeUtils';
 import { getAncestorKeys } from '@/utils/specifications/SpecificationDetailUtils';
 
@@ -103,6 +123,21 @@ const parsedTree = computed<{ nodes: TreeNode[]; errorMessage: string | null }>(
 });
 const nodes = computed(() => parsedTree.value.nodes);
 const schemaError = computed(() => parsedTree.value.errorMessage);
+
+const searchModeOptions: { label: string; value: SpecificationSearchMode }[] = [
+  { label: 'Name', value: 'name' },
+  { label: 'ID', value: 'id' },
+];
+const searchQuery = ref('');
+const searchMode = ref<SpecificationSearchMode>('name');
+const searchPlaceholder = computed(() => (searchMode.value === 'id' ? 'Search by ID' : 'Search by name'));
+const displayedNodes = computed(() => filterSpecificationTree(nodes.value, searchQuery.value, searchMode.value));
+
+watch([searchQuery, searchMode], () => {
+  if (searchQuery.value.trim()) {
+    expandedKeys.value = Object.fromEntries(collectExpandableKeys(displayedNodes.value).map((key) => [key, true]));
+  }
+});
 
 /**
  * Expands all categories and subcategories of the tree.
