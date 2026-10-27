@@ -91,6 +91,7 @@ describe('Component tests for the tab used by logged-in users to switch pages', 
   it('Validate tabs for a logged-in Dataland-Reader with no company role assignments', function () {
     mountDatasetsTabMenuWithAuthentication([KEYCLOAK_ROLE_USER], []);
     assertThatStandardTabsAreAllVisible();
+    isTabVisible('SPECIFICATIONS', true);
     for (const tabText of Object.values(RoleBasedTabs)) {
       isTabVisible(tabText, false);
     }
@@ -191,6 +192,15 @@ describe('Component tests for the tab used by logged-in users to switch pages', 
     mountDatasetsTabMenuWithAuthentication([KEYCLOAK_ROLE_USER], []);
     cy.get('[data-pc-name="tablist"]').contains('MY DATASETS').click();
     cy.get(`[data-pc-name="tab"][data-p-active="true"]`).contains(AlwaysVisibleTabs.MyDatasets).should('exist');
+  });
+
+  it('Highlights the SPECIFICATIONS tab on the overview and the framework detail route', () => {
+    mountDatasetsTabMenuWithAuthentication([KEYCLOAK_ROLE_USER], []);
+    cy.get('[data-pc-name="tablist"]').contains('SPECIFICATIONS').click();
+    cy.url().should('include', '/framework-specifications');
+    cy.get(`[data-pc-name="tab"][data-p-active="true"]`).contains('SPECIFICATIONS').should('exist');
+    cy.wrap(router.push('/framework-specifications/pcaf'));
+    cy.get(`[data-pc-name="tab"][data-p-active="true"]`).contains('SPECIFICATIONS').should('exist');
   });
 
   it('Validate route navigation for MY COMPANY tab', () => {
