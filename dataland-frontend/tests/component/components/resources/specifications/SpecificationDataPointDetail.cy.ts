@@ -7,6 +7,7 @@ import {
   FISCAL_YEAR_END_TYPE_ID,
   FRAMEWORK_ID,
   interceptSpecificationService,
+  mockBaseType,
   mockFiscalYearDeviationType,
 } from '@ct/testUtils/SpecificationMocks';
 
@@ -72,6 +73,66 @@ describe('Component tests for the specification data point detail', () => {
     cy.get('[data-test="specificationExample"]').should('contain.text', 'Yes');
   });
 
+  it('Keeps the data point documentation visible while the resolved schema fails and recovers on retry', () => {
+    let allowSchemaResponse = false;
+    let schemaRequestCount = 0;
+    let failedSchemaRequestCount = 0;
+    cy.intercept('GET', `**/specifications/frameworks/${FRAMEWORK_ID}/resolved-schema`, (request) => {
+      schemaRequestCount += 1;
+      if (!allowSchemaResponse) {
+        request.reply({ statusCode: 500, body: {} });
+        return;
+      }
+
+      request.reply({
+        framework: { id: FRAMEWORK_ID, ref: 'ref-pcaf' },
+        name: 'PCAF',
+        businessDefinition: 'The Partnership for Carbon Accounting Financials framework.',
+        resolvedSchema: { general: { general: { fiscalYearDeviation: { type: 'string' } } } },
+      });
+    }).as('resolvedSchemaRetry');
+
+    mountDetail(FISCAL_YEAR_DEVIATION_TYPE_ID, FISCAL_YEAR_DEVIATION_PATH);
+    cy.get('[data-test="specificationDataPointName"]').should('have.text', 'Fiscal Year Deviation');
+    cy.get('[data-test="specificationBaseTypeName"]').should('be.visible');
+    cy.get('[data-test="specificationSchemaPanel"] button').click();
+    cy.get('[data-test="specificationSchemaError"]')
+      .should('be.visible')
+      .and('contain.text', 'The schema could not be loaded.');
+    cy.get('[data-test="specificationSchemaRetryButton"]').should('be.visible');
+    cy.get('[data-test="specificationDataPointName"]').should('be.visible');
+    cy.then(() => {
+      failedSchemaRequestCount = schemaRequestCount;
+    });
+
+    cy.then(() => {
+      allowSchemaResponse = true;
+    });
+    cy.get('[data-test="specificationSchemaRetryButton"]').click();
+    cy.get('[data-test="specificationSchema"]').should('contain.text', 'string');
+    cy.wrap(null).should(() => {
+      expect(schemaRequestCount).to.be.greaterThan(failedSchemaRequestCount);
+    });
+    cy.get('[data-test="specificationDataPointName"]').should('have.text', 'Fiscal Year Deviation');
+  });
+
+  it('Shows the missing-schema hint when the requested field path is absent', () => {
+    cy.intercept('GET', `**/specifications/frameworks/${FRAMEWORK_ID}/resolved-schema`, {
+      framework: { id: FRAMEWORK_ID, ref: 'ref-pcaf' },
+      name: 'PCAF',
+      businessDefinition: 'The Partnership for Carbon Accounting Financials framework.',
+      resolvedSchema: { general: { general: {} } },
+    }).as('resolvedSchemaWithoutField');
+
+    mountDetail(FISCAL_YEAR_DEVIATION_TYPE_ID, FISCAL_YEAR_DEVIATION_PATH);
+    cy.get('[data-test="specificationBaseTypeName"]').should('be.visible');
+    cy.get('[data-test="specificationSchemaPanel"] button').click();
+    cy.get('[data-test="specificationSchemaMissing"]')
+      .should('be.visible')
+      .and('have.text', 'No schema is available for this field.');
+    cy.get('[data-test="specificationDataPointName"]').should('have.text', 'Fiscal Year Deviation');
+  });
+
   it('Does not request the base type if the data point type cannot be loaded', () => {
     cy.intercept('GET', `**/specifications/data-point-types/${FISCAL_YEAR_DEVIATION_TYPE_ID}`, {
       statusCode: 500,
@@ -99,10 +160,92 @@ describe('Component tests for the specification data point detail', () => {
     cy.get('[data-test="specificationDataPointName"]').should('have.text', 'Fiscal Year Deviation');
   });
 
-  it('Shows an error with retry if the base type cannot be loaded', () => {
-    cy.intercept('GET', '**/specifications/data-point-base-types/baseEnum', { statusCode: 500, body: {} });
+  it('Keeps the data point documentation visible and recovers from a base type error after retry', () => {
+    let allowBaseTypeResponse = false;
+    let baseTypeRequestCount = 0;
+    let failedBaseTypeRequestCount = 0;
+    cy.intercept('GET', '**/specifications/data-point-base-types/baseEnum', (request) => {
+      baseTypeRequestCount += 1;
+      if (allowBaseTypeResponse) {
+        request.reply(mockBaseType);
+      } else {
+        request.reply({ statusCode: 500, body: {} });
+      }
+    }).as('baseTypeRetry');
+
     mountDetail(FISCAL_YEAR_DEVIATION_TYPE_ID, FISCAL_YEAR_DEVIATION_PATH);
     cy.get('[data-test="specificationBaseTypeError"]').should('be.visible');
-    cy.get('[data-test="specificationDataPointName"]').should('be.visible');
+    cy.get('[data-test="specificationBaseTypeRetryButton"]').should('be.visible');
+    cy.get('[data-test="specificationDataPointName"]').should('have.text', 'Fiscal Year Deviation');
+    cy.then(() => {
+      failedBaseTypeRequestCount = baseTypeRequestCount;
+    });
+
+    cy.then(() => {
+      allowBaseTypeResponse = true;
+    });
+    cy.get('[data-test="specificationBaseTypeRetryButton"]').click();
+    cy.get('[data-test="specificationBaseTypeName"]').should('have.text', 'Base Enum Name');
+    cy.wrap(null).should(() => {
+      expect(baseTypeRequestCount).to.be.greaterThan(failedBaseTypeRequestCount);
+    });
+    cy.get('[data-test="specificationDataPointName"]').should('have.text', 'Fiscal Year Deviation');
+  });
+
+  it('Loads the base type only after the data point type response is released', () => {
+    let dataPointTypeRequestStarted = false;
+    let dataPointTypeResponseReleased = false;
+    let baseTypeRequestedBeforeDataPointTypeResponse = false;
+    let baseTypeRequestUrl = '';
+    let releaseDataPointType: () => void = () => {};
+    let releaseBaseType: () => void = () => {};
+
+    cy.intercept('GET', `**/specifications/data-point-types/${FISCAL_YEAR_DEVIATION_TYPE_ID}`, (request) => {
+      dataPointTypeRequestStarted = true;
+      return new Promise<void>((resolve) => {
+        releaseDataPointType = (): void => {
+          dataPointTypeResponseReleased = true;
+          request.reply(mockFiscalYearDeviationType);
+          resolve();
+        };
+      });
+    }).as('heldDataPointType');
+
+    cy.intercept('GET', '**/specifications/data-point-base-types/*', (request) => {
+      baseTypeRequestUrl = request.url;
+      baseTypeRequestedBeforeDataPointTypeResponse = !dataPointTypeResponseReleased;
+      return new Promise<void>((resolve) => {
+        releaseBaseType = (): void => {
+          request.reply(mockBaseType);
+          resolve();
+        };
+      });
+    }).as('heldBaseType');
+
+    mountDetail(FISCAL_YEAR_DEVIATION_TYPE_ID, FISCAL_YEAR_DEVIATION_PATH);
+    cy.get('[data-test="specificationDataPointLoading"]').should('be.visible');
+    cy.get('[data-test="specificationBaseTypeLoading"]').should('not.exist');
+    cy.wrap(null).should(() => {
+      expect(dataPointTypeRequestStarted).to.equal(true);
+    });
+    cy.wrap(null).should(() => {
+      expect(baseTypeRequestUrl).to.equal('');
+    });
+
+    cy.then(() => releaseDataPointType());
+    cy.get('[data-test="specificationDataPointName"]').should('have.text', 'Fiscal Year Deviation');
+    cy.get('[data-test="specificationBaseTypeLoading"]').should('be.visible');
+    cy.wrap(null).should(() => {
+      expect(baseTypeRequestUrl).to.include('/specifications/data-point-base-types/baseEnum');
+      expect(baseTypeRequestedBeforeDataPointTypeResponse).to.equal(false);
+    });
+
+    cy.then(() => releaseBaseType());
+    cy.get('[data-test="specificationBaseTypeName"]').should('have.text', 'Base Enum Name');
+    cy.get('[data-test="specificationBaseTypeValidatedBy"]').should('contain.text', 'SomeValidator');
+    cy.get('[data-test="specificationSchemaPanel"] button').click();
+    cy.get('[data-test="specificationSchema"]').should('contain.text', 'string');
+    cy.get('[data-test="specificationExamplePanel"] button').click();
+    cy.get('[data-test="specificationExample"]').should('contain.text', 'Yes');
   });
 });
