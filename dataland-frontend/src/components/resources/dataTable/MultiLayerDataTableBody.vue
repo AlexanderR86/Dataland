@@ -13,6 +13,12 @@
           data-row-header="true"
         >
           <span class="table-left-label">{{ cellOrSectionConfig.label }}</span>
+          <SpecificationFieldLink
+            :links="specificationFieldLinks"
+            :data-point-type-id="cellOrSectionConfig.dataPointTypeId"
+            :explicit-field-path="cellOrSectionConfig.fieldPath"
+            :label="cellOrSectionConfig.label"
+          />
           <em
             v-if="cellOrSectionConfig.explanation"
             class="material-icons info-icon"
@@ -110,6 +116,7 @@
           :isTopLevel="false"
           :isVisible="isVisible && expandedSections.has(idx)"
           :inReviewMode="inReviewMode"
+          :specification-field-links="specificationFieldLinks"
           @dataUpdated="$emit('dataUpdated')"
         />
       </template>
@@ -121,6 +128,8 @@
 import { type DataAndMetaInformation } from '@/api-models/DataAndMetaInformation';
 import MultiLayerDataTableBody from '@/components/resources/dataTable/MultiLayerDataTableBody.vue';
 import MultiLayerDataTableCell from '@/components/resources/dataTable/MultiLayerDataTableCell.vue';
+import SpecificationFieldLink from '@/components/resources/specifications/SpecificationFieldLink.vue';
+import type { SpecificationFieldLinks } from '@/utils/specifications/SpecificationLinkUtils';
 import {
   isCellOrSectionVisible,
   type MLDTCellConfig,
@@ -226,6 +235,7 @@ const props = defineProps<{
   isTopLevel: boolean;
   isVisible: boolean;
   inReviewMode: boolean;
+  specificationFieldLinks?: SpecificationFieldLinks;
 }>();
 
 onMounted(() => {

@@ -15,6 +15,7 @@ export interface MLDTCellConfig<FrameworkDataType> {
   valueGetterByDataPoint?: (dataPoint: string) => AvailableMLDTDisplayObjectTypes;
   uploadComponentName?: string;
   dataPointTypeId?: string;
+  fieldPath?: string;
   explanation?: string;
   class?: string;
   name?: string;

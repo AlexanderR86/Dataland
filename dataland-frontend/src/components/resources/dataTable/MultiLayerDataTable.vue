@@ -77,6 +77,7 @@
             :config="config"
             :isTopLevel="true"
             :isVisible="true"
+            :specification-field-links="specificationFieldLinks"
             @dataUpdated="onDataUpdated"
           />
         </tbody>
@@ -95,6 +96,7 @@
 <script setup lang="ts" generic="T">
 import { type MLDTConfig } from '@/components/resources/dataTable/MultiLayerDataTableConfiguration';
 import MultiLayerDataTableBody from '@/components/resources/dataTable/MultiLayerDataTableBody.vue';
+import type { SpecificationFieldLinks } from '@/utils/specifications/SpecificationLinkUtils';
 import { type DataAndMetaInformation } from '@/api-models/DataAndMetaInformation';
 import Tooltip from 'primevue/tooltip';
 import { convertUnixTimeInMsToDateString, dateStringFormatter } from '@/utils/DataFormatUtils';
@@ -198,6 +200,7 @@ const props = defineProps<{
   ariaLabel: string;
   inReviewMode: boolean;
   hideEmptyFields: boolean;
+  specificationFieldLinks?: SpecificationFieldLinks;
 }>();
 </script>
 <style scoped>

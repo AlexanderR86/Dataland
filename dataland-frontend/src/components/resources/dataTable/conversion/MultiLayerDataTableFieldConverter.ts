@@ -64,6 +64,7 @@ export function getDataModelFieldCellConfig(path: string, field: Field): MLDTCel
       valueGetter: valueGetter,
       uploadComponentName: field.uploadComponentName,
       dataPointTypeId: field.dataPointTypeId,
+      fieldPath: path,
     };
   } else if (field.component == 'UploadReports') {
     return undefined;

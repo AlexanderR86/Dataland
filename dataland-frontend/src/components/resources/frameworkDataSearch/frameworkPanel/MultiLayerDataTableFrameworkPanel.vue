@@ -22,7 +22,8 @@
       :reporting-periods="sortedReportingPeriods"
       :reports="sortedReports"
     />
-    <MultiLayerDataTable
+    <SpecificationDataTable
+      :framework-identifier="frameworkIdentifier"
       :dataAndMetaInfo="sortedDataAndMetaInfo"
       :inReviewMode="inReviewMode"
       :config="
@@ -48,7 +49,7 @@
 
 <script setup generic="FrameworkDataType" lang="ts">
 import DatalandProgressSpinner from '@/components/general/DatalandProgressSpinner.vue';
-import MultiLayerDataTable from '@/components/resources/dataTable/MultiLayerDataTable.vue';
+import SpecificationDataTable from '@/components/resources/specifications/SpecificationDataTable.vue';
 import ShowMultipleReportsBanner from '@/components/resources/frameworkDataSearch/ShowMultipleReportsBanner.vue';
 import { humanizeStringOrNumber } from '@/utils/StringFormatter';
 import { computed, inject, ref, shallowRef, watch } from 'vue';
