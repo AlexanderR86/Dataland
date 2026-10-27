@@ -133,6 +133,15 @@ const searchMode = ref<SpecificationSearchMode>('name');
 const searchPlaceholder = computed(() => (searchMode.value === 'id' ? 'Search by ID' : 'Search by name'));
 const displayedNodes = computed(() => filterSpecificationTree(nodes.value, searchQuery.value, searchMode.value));
 
+watch(
+  () => props.frameworkId,
+  () => {
+    searchQuery.value = '';
+    searchMode.value = 'name';
+    expandedKeys.value = Object.fromEntries(getAncestorKeys(props.selectedPath ?? '').map((key) => [key, true]));
+  }
+);
+
 watch([searchQuery, searchMode], () => {
   if (searchQuery.value.trim()) {
     expandedKeys.value = Object.fromEntries(collectExpandableKeys(displayedNodes.value).map((key) => [key, true]));

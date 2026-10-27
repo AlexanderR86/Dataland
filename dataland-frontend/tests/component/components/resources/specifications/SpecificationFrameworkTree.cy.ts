@@ -1,4 +1,5 @@
 import SpecificationFrameworkTree from '@/components/resources/specifications/SpecificationFrameworkTree.vue';
+import { defineComponent, h, ref, type VNode } from 'vue';
 import { minimalKeycloakMock } from '@ct/testUtils/Keycloak';
 import {
   FISCAL_YEAR_DEVIATION_PATH,
@@ -87,6 +88,35 @@ describe('Component tests for the specification framework tree', () => {
     cy.intercept('GET', `**/specifications/frameworks/${FRAMEWORK_ID}`, mockFramework);
     cy.get('[data-test="specificationTreeRetryButton"]').click();
     cy.get('[data-test="specificationTree"]').should('be.visible');
+  });
+
+  it('Resets the search and expanded branches when switching frameworks', () => {
+    const frameworkId = ref(FRAMEWORK_ID);
+    cy.intercept('GET', '**/specifications/frameworks/sfdr', {
+      ...mockFramework,
+      framework: { id: 'sfdr', ref: 'ref-sfdr' },
+      schema: JSON.stringify({ environment: { emissions: { id: 'emissions', ref: 'ref-emissions' } } }),
+    });
+    const host = defineComponent({
+      render(): VNode {
+        return h(SpecificationFrameworkTree, { frameworkId: frameworkId.value });
+      },
+    });
+    cy.mountWithPlugins(host, { keycloak: minimalKeycloakMock({}) });
+    cy.get('[data-test="specificationTreeSearchMode"]').contains('ID').click();
+    cy.get('[data-test="specificationTreeSearch"]').type('extendedEnumFiscal');
+    cy.get('[data-test="specificationTree"]').should('contain.text', 'Fiscal Year Deviation');
+    cy.then(() => {
+      frameworkId.value = 'sfdr';
+    });
+    cy.get('[data-test="specificationTreeSearch"]')
+      .should('have.value', '')
+      .and('have.attr', 'placeholder', 'Search by name');
+    cy.get('[data-test="specificationTree"]').should('contain.text', 'Environment');
+    cy.get('[data-test="specificationTreeNoMatches"]').should('not.exist');
+    cy.get('[data-test="specificationTree"]').should('not.contain.text', 'Emissions');
+    cy.get('[data-test="specificationTreeSearch"]').type('emissions');
+    cy.get('[data-test="specificationTree"]').should('contain.text', 'Emissions');
   });
 
   it('Shows a hint if the schema is not valid JSON', () => {
