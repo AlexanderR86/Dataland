@@ -1,5 +1,5 @@
 <template>
-  <Panel header="CALCULATION RULES" toggleable data-test="specificationCalculationRules">
+  <Panel header="Rules" toggleable data-test="specificationCalculationRules">
     <div
       v-for="(rule, index) in rules"
       :key="index"

@@ -68,16 +68,18 @@
               </div>
               <span v-else>None</span>
             </dd>
+
+            <dt>Calculation rules</dt>
+            <dd>
+              <SpecificationCalculationRules
+                v-if="dataPointType.calculationRules.length > 0"
+                :rules="dataPointType.calculationRules"
+              />
+              <span v-else data-test="specificationNoCalculationRules">None</span>
+            </dd>
           </dl>
         </template>
       </Card>
-
-      <SpecificationCalculationRules
-        v-if="dataPointType.calculationRules.length > 0"
-        class="mt-4"
-        :rules="dataPointType.calculationRules"
-      />
-      <p v-else class="mt-4 mb-0" data-test="specificationNoCalculationRules">Calculation rules: None</p>
 
       <SpecificationBaseTypeDetail
         :data-point-base-type-id="dataPointType.dataPointBaseType.id"
