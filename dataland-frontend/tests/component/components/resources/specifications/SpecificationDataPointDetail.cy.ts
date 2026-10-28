@@ -9,6 +9,12 @@ import {
   interceptSpecificationService,
   mockBaseType,
   mockFiscalYearDeviationType,
+  mockFramework,
+  MAIN_PCAF_SECTOR_TYPE_ID,
+  mockSecondFrameworkOnlyType,
+  SECOND_FRAMEWORK_ID,
+  SECOND_FRAMEWORK_ONLY_TYPE_ID,
+  UNKNOWN_RULE_INPUT_ID,
 } from '@ct/testUtils/SpecificationMocks';
 
 describe('Component tests for the specification data point detail', () => {
@@ -45,12 +51,95 @@ describe('Component tests for the specification data point detail', () => {
     cy.get('[data-test="specificationDataPointCard"]')
       .find('[data-test="specificationCalculationRules"]')
       .should('be.visible');
-    cy.get('[data-test="specificationCalculationRule-0"]').should('contain.text', 'SUM').and('contain.text', 'inputA');
+    cy.get('[data-test="specificationCalculationRule-0"]').should('contain.text', 'SUM');
     cy.get('[data-test="specificationCalculationRule-1"]')
       .should('contain.text', 'AVERAGE')
-      .and('contain.text', 'inputC');
+      .and('contain.text', 'Main Pcaf Sector');
     cy.get('[data-test="specificationCalculationRules"]').should('contain.text', 'Rule 1');
     cy.get('[data-test="specificationCalculationRules"]').should('contain.text', 'Rule 2');
+  });
+
+  it('Links rule inputs to their fields in the framework and marks unused inputs', () => {
+    mountDetail(FISCAL_YEAR_DEVIATION_TYPE_ID, FISCAL_YEAR_DEVIATION_PATH);
+    cy.get(`[data-test="specificationRuleInputLink-${FISCAL_YEAR_END_TYPE_ID}"]`)
+      .should('have.text', 'Fiscal Year End')
+      .and('have.attr', 'title', FISCAL_YEAR_END_TYPE_ID)
+      .and('have.attr', 'target', '_blank')
+      .and('have.attr', 'href')
+      .and('include', `/framework-specifications/${FRAMEWORK_ID}`)
+      .and('include', `field=${FISCAL_YEAR_END_PATH}`);
+    cy.get(`[data-test="specificationRuleInputLink-${MAIN_PCAF_SECTOR_TYPE_ID}"]`).should(
+      'have.text',
+      'Main Pcaf Sector'
+    );
+    cy.get(`[data-test="specificationRuleInputLink-${UNKNOWN_RULE_INPUT_ID}"]`).should('not.exist');
+    cy.get(`[data-test="specificationRuleInputUnknown-${UNKNOWN_RULE_INPUT_ID}"]`).should(
+      'contain.text',
+      'not used in any framework'
+    );
+  });
+
+  it('Links rule inputs that only exist in another framework to that framework in a new tab', () => {
+    mountDetail(FISCAL_YEAR_DEVIATION_TYPE_ID, FISCAL_YEAR_DEVIATION_PATH);
+    cy.get(`[data-test="specificationRuleInputFrameworkLink-${SECOND_FRAMEWORK_ONLY_TYPE_ID}-${SECOND_FRAMEWORK_ID}"]`)
+      .should('contain.text', 'Main Pcaf Sector')
+      .and('contain.text', 'SFDR')
+      .and('have.attr', 'target', '_blank')
+      .and('have.attr', 'href')
+      .and('include', `/framework-specifications/${SECOND_FRAMEWORK_ID}`)
+      .and('include', 'field=general.company.mainPcafSector');
+    cy.get(`[data-test="specificationRuleInputLink-${SECOND_FRAMEWORK_ONLY_TYPE_ID}"]`).should('not.exist');
+  });
+
+  it('Shows one link per framework if an input is used by several other frameworks', () => {
+    cy.intercept('GET', `**/specifications/data-point-types/${SECOND_FRAMEWORK_ONLY_TYPE_ID}`, {
+      ...mockSecondFrameworkOnlyType,
+      usedBy: [
+        { id: SECOND_FRAMEWORK_ID, ref: 'ref-sfdr' },
+        { id: 'otherFramework', ref: 'ref-other' },
+      ],
+    });
+    cy.intercept('GET', '**/specifications/frameworks/otherFramework', { statusCode: 500, body: {} });
+    mountDetail(FISCAL_YEAR_DEVIATION_TYPE_ID, FISCAL_YEAR_DEVIATION_PATH);
+    cy.get(`[data-test="specificationRuleInputOtherFrameworks-${SECOND_FRAMEWORK_ONLY_TYPE_ID}"] a`).should(
+      'have.length',
+      2
+    );
+  });
+
+  it('Keeps the input as plain text if the data point type of an input cannot be loaded', () => {
+    cy.intercept('GET', `**/specifications/data-point-types/${SECOND_FRAMEWORK_ONLY_TYPE_ID}`, {
+      statusCode: 500,
+      body: {},
+    });
+    mountDetail(FISCAL_YEAR_DEVIATION_TYPE_ID, FISCAL_YEAR_DEVIATION_PATH);
+    cy.get('[data-test="specificationCalculationRule-1"]').should('contain.text', SECOND_FRAMEWORK_ONLY_TYPE_ID);
+    cy.get(`[data-test="specificationRuleInputOtherFrameworks-${SECOND_FRAMEWORK_ONLY_TYPE_ID}"]`).should('not.exist');
+  });
+
+  it('Shows rule inputs as plain text if the framework cannot be loaded', () => {
+    cy.intercept('GET', `**/specifications/frameworks/${FRAMEWORK_ID}`, { statusCode: 500, body: {} });
+    mountDetail(FISCAL_YEAR_DEVIATION_TYPE_ID, FISCAL_YEAR_DEVIATION_PATH);
+    cy.get('[data-test="specificationCalculationRule-0"]').should('contain.text', FISCAL_YEAR_END_TYPE_ID);
+    cy.get(`[data-test="specificationRuleInputLink-${FISCAL_YEAR_END_TYPE_ID}"]`).should('not.exist');
+    cy.get(`[data-test="specificationRuleInputUnknown-${UNKNOWN_RULE_INPUT_ID}"]`).should('not.exist');
+  });
+
+  it('Shows no not-in-framework hint while the framework is still loading', () => {
+    let releaseFramework: () => void = () => {};
+    cy.intercept('GET', `**/specifications/frameworks/${FRAMEWORK_ID}`, (request) => {
+      return new Promise<void>((resolve) => {
+        releaseFramework = (): void => {
+          request.reply(mockFramework);
+          resolve();
+        };
+      });
+    }).as('heldFramework');
+    mountDetail(FISCAL_YEAR_DEVIATION_TYPE_ID, FISCAL_YEAR_DEVIATION_PATH);
+    cy.get('[data-test="specificationCalculationRule-0"]').should('contain.text', UNKNOWN_RULE_INPUT_ID);
+    cy.get(`[data-test="specificationRuleInputUnknown-${UNKNOWN_RULE_INPUT_ID}"]`).should('not.exist');
+    cy.then(() => releaseFramework());
+    cy.get(`[data-test="specificationRuleInputUnknown-${UNKNOWN_RULE_INPUT_ID}"]`).should('be.visible');
   });
 
   it('Shows None for constraints and calculation rules if there are none', () => {

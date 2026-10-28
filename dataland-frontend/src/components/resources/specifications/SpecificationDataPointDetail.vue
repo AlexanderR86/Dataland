@@ -74,6 +74,8 @@
               <SpecificationCalculationRules
                 v-if="dataPointType.calculationRules.length > 0"
                 :rules="dataPointType.calculationRules"
+                :framework-id="frameworkId"
+                :paths-by-type-id="pathsByTypeId"
               />
               <span v-else data-test="specificationNoCalculationRules">None</span>
             </dd>
@@ -99,8 +101,10 @@ import Tag from 'primevue/tag';
 import DatalandProgressSpinner from '@/components/general/DatalandProgressSpinner.vue';
 import SpecificationCalculationRules from '@/components/resources/specifications/SpecificationCalculationRules.vue';
 import SpecificationBaseTypeDetail from '@/components/resources/specifications/SpecificationBaseTypeDetail.vue';
-import { formatSchemaKey, formatSchemaPath } from '@/utils/specifications/SpecificationTreeUtils';
+import { buildDataPointTypeIdToPathsMap } from '@/utils/specifications/SpecificationDetailUtils';
+import { formatSchemaKey, formatSchemaPath, parseFrameworkSchema } from '@/utils/specifications/SpecificationTreeUtils';
 import { useGetSpecificationDataPointTypeByIdQuery } from '@/api-queries/specification-service/data-point-type/useGetSpecificationDataPointTypeByIdQuery';
+import { useGetSpecificationFrameworkByIdQuery } from '@/api-queries/specification-service/framework/useGetSpecificationFrameworkByIdQuery';
 import { useListSpecificationFrameworksQuery } from '@/api-queries/specification-service/framework/useListSpecificationFrameworksQuery';
 
 const props = defineProps<{
@@ -118,6 +122,17 @@ const {
 } = useGetSpecificationDataPointTypeByIdQuery({ dataPointTypeId: () => props.dataPointTypeId });
 
 const { data: frameworks } = useListSpecificationFrameworksQuery();
+
+const { data: framework } = useGetSpecificationFrameworkByIdQuery({ frameworkId: () => props.frameworkId });
+
+const pathsByTypeId = computed(() => {
+  if (!framework.value) return undefined;
+  try {
+    return buildDataPointTypeIdToPathsMap(parseFrameworkSchema(framework.value.schema));
+  } catch {
+    return undefined;
+  }
+});
 
 const frameworkNamesById = computed(
   () => new Map((frameworks.value ?? []).map((framework) => [framework.framework.id, framework.name]))

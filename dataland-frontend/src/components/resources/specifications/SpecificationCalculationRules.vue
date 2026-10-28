@@ -13,7 +13,7 @@
       <p class="specification-inputs-label">Inputs</p>
       <ul v-if="rule.inputs.length > 0" class="specification-inputs">
         <li v-for="input in rule.inputs" :key="input">
-          <code>{{ input }}</code>
+          <SpecificationRuleInput :input-id="input" :framework-id="frameworkId" :paths-by-type-id="pathsByTypeId" />
         </li>
       </ul>
       <p v-else class="m-0">None</p>
@@ -25,9 +25,12 @@
 import Panel from 'primevue/panel';
 import Tag from 'primevue/tag';
 import { type CalculationRule } from '@clients/specificationservice';
+import SpecificationRuleInput from '@/components/resources/specifications/SpecificationRuleInput.vue';
 
 defineProps<{
   rules: CalculationRule[];
+  frameworkId: string;
+  pathsByTypeId?: Map<string, string[]>;
 }>();
 </script>
 

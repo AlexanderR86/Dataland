@@ -12,6 +12,9 @@ export const FISCAL_YEAR_DEVIATION_TYPE_ID = 'extendedEnumFiscalYearDeviation';
 export const FISCAL_YEAR_END_PATH = 'general.general.fiscalYearEnd';
 export const SECOND_FRAMEWORK_FISCAL_YEAR_END_PATH = 'general.company.fiscalYearEnd';
 export const FISCAL_YEAR_END_TYPE_ID = 'extendedDateFiscalYearEnd';
+export const MAIN_PCAF_SECTOR_TYPE_ID = 'extendedEnumPcafMainSector';
+export const SECOND_FRAMEWORK_ONLY_TYPE_ID = 'extendedEnumSfdrMainPcafSector';
+export const UNKNOWN_RULE_INPUT_ID = 'extendedDecimalNotInFramework';
 export const MAIN_PCAF_SECTOR_PATH = 'general.company.mainPcafSector';
 
 export const mockFrameworkList: SimpleFrameworkSpecification[] = [
@@ -39,7 +42,7 @@ const mockSchema = {
       fiscalYearEnd: { id: FISCAL_YEAR_END_TYPE_ID, ref: 'ref-end' },
     },
     company: {
-      mainPcafSector: { id: 'extendedEnumPcafMainSector', ref: 'ref-sector' },
+      mainPcafSector: { id: MAIN_PCAF_SECTOR_TYPE_ID, ref: 'ref-sector' },
     },
   },
 };
@@ -55,7 +58,7 @@ const mockSfdrSchema = {
   general: {
     company: {
       fiscalYearEnd: { id: FISCAL_YEAR_END_TYPE_ID, ref: 'ref-end' },
-      mainPcafSector: { id: 'extendedEnumSfdrMainPcafSector', ref: 'ref-sfdr-sector' },
+      mainPcafSector: { id: SECOND_FRAMEWORK_ONLY_TYPE_ID, ref: 'ref-sfdr-sector' },
     },
   },
 };
@@ -75,8 +78,8 @@ export const mockFiscalYearDeviationType: DataPointTypeSpecification = {
   usedBy: [{ id: FRAMEWORK_ID, ref: 'ref-pcaf' }],
   constraints: ['required'],
   calculationRules: [
-    { calculationMethod: 'SUM', inputs: ['inputA', 'inputB'] },
-    { calculationMethod: 'AVERAGE', inputs: ['inputC'] },
+    { calculationMethod: 'SUM', inputs: [FISCAL_YEAR_END_TYPE_ID, UNKNOWN_RULE_INPUT_ID] },
+    { calculationMethod: 'AVERAGE', inputs: [MAIN_PCAF_SECTOR_TYPE_ID, SECOND_FRAMEWORK_ONLY_TYPE_ID] },
   ],
 };
 
@@ -90,6 +93,20 @@ export const mockTypeWithoutRules: DataPointTypeSpecification = {
   ],
   constraints: null,
   calculationRules: [],
+};
+
+export const mockSecondFrameworkOnlyType: DataPointTypeSpecification = {
+  ...mockTypeWithoutRules,
+  dataPointType: { id: SECOND_FRAMEWORK_ONLY_TYPE_ID, ref: 'ref-sfdr-sector' },
+  name: 'Sfdr Sector Type Name',
+  usedBy: [{ id: SECOND_FRAMEWORK_ID, ref: 'ref-sfdr' }],
+};
+
+export const mockUnusedType: DataPointTypeSpecification = {
+  ...mockTypeWithoutRules,
+  dataPointType: { id: UNKNOWN_RULE_INPUT_ID, ref: 'ref-unused' },
+  name: 'Unused Type Name',
+  usedBy: [],
 };
 
 export const mockBaseType: DataPointBaseTypeSpecification = {
@@ -120,6 +137,17 @@ export function interceptSpecificationService(): void {
   ).as('getDataPointType');
   cy.intercept('GET', `**/specifications/data-point-types/${FISCAL_YEAR_END_TYPE_ID}`, mockTypeWithoutRules).as(
     'getDataPointTypeWithoutRules'
+  );
+  cy.intercept('GET', `**/specifications/frameworks/${SECOND_FRAMEWORK_ID}`, mockSecondFramework).as(
+    'getSecondFramework'
+  );
+  cy.intercept(
+    'GET',
+    `**/specifications/data-point-types/${SECOND_FRAMEWORK_ONLY_TYPE_ID}`,
+    mockSecondFrameworkOnlyType
+  ).as('getSecondFrameworkOnlyType');
+  cy.intercept('GET', `**/specifications/data-point-types/${UNKNOWN_RULE_INPUT_ID}`, mockUnusedType).as(
+    'getUnusedType'
   );
   cy.intercept('GET', '**/specifications/data-point-base-types/baseEnum', mockBaseType).as('getBaseType');
 }
