@@ -31,7 +31,7 @@
 | UC-4 | Expliziter Feldpfad bei mehrfacher Typ-ID | Mittel | Agent A (UI), Agent B (Util) | Erledigt; UI- und Utilfälle bestanden |
 | UC-5 | Frameworkliste für Feldlinks nicht verfügbar | Mittel | Agent A | Erledigt; leer, Fehler, verzögert und Freigabe geprüft |
 | UC-6 | Abhängige Detailanfragen und Ladezustände | Mittel | Agent C | Erledigt; abhängige Anfragen und Ladezustände bestanden |
-| UC-7 | Nutzerweg aus My Datasets bis zur Dokumentation | Mittel | Späterer E2E-Durchlauf | Zurückgestellt |
+| UC-7 | Nutzerweg aus My Datasets bis zur Dokumentation | Mittel | Koordinator | Erledigt; E2E-Journey 4/4 bestanden |
 
 ### UC-1: Feldlinks mit echter Frameworkkonfiguration
 
@@ -144,7 +144,7 @@ Nur ausführen, wenn der neue Sitzungsauftrag Commit und Push ausdrücklich auto
 - Schritt 2: Erledigt; drei general-Agenten parallel mit exklusiven Dateibereichen gestartet.
 - Schritt 3: Erledigt; gezielte 3 Specs / 28 Tests bestanden; typecheck, lintci, formatci, checkdependencies, checkcypresscompilation und `git diff --check` erfolgreich; Review ohne offene Findings.
 - Schritt 4: Commits und Push ausdrücklich autorisiert; Umsetzung läuft.
-- UC-7: Zurückgestellt.
+- UC-7: Erledigt. Zwei neue E2E-Tests in `dataland-frontend/tests/e2e/specs/user-experience/SpecificationsJourney.ts` (eigenes per API hochgeladenes PCAF-Dataset des Admins: Frameworklink ohne Zeilenklick; VIEW, Feldlink mit `target="_blank"`/`rel`, Ziel im selben Tab). Lauf gegen die lokale Umgebung: 4 passing, 0 failing; typecheck, lintci, formatci, checkdependencies, checkcypresscompilation, `git diff --check` erfolgreich.
 
 ### Verifikation dieses Durchlaufs
 
