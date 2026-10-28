@@ -6,7 +6,11 @@ import {
   formatSchemaPath,
   parseFrameworkSchema,
 } from '@/utils/specifications/SpecificationTreeUtils';
-import { getAncestorKeys, getDataPointTypeIdAtPath } from '@/utils/specifications/SpecificationDetailUtils';
+import {
+  buildDataPointTypeIdToPathsMap,
+  getAncestorKeys,
+  getDataPointTypeIdAtPath,
+} from '@/utils/specifications/SpecificationDetailUtils';
 import { mockFramework } from '@ct/testUtils/SpecificationMocks';
 
 describe('Unit tests for the specification tree utils', () => {
@@ -70,5 +74,20 @@ describe('Unit tests for the specification tree utils', () => {
     expect(getDataPointTypeIdAtPath(schema, 'general.general')).to.equal(undefined);
     expect(getDataPointTypeIdAtPath(schema, 'does.not.exist')).to.equal(undefined);
     expect(getAncestorKeys('a.b.c')).to.deep.equal(['a', 'a.b']);
+  });
+
+  it('Maps data point type ids to all their paths in the schema', () => {
+    const map = buildDataPointTypeIdToPathsMap({
+      a: { b: { x: { id: 'typeX', ref: 'r' }, y: { id: 'typeY', ref: 'r' } } },
+      c: { z: { id: 'typeX', ref: 'r' } },
+    });
+    expect(map.get('typeX')).to.deep.equal(['a.b.x', 'c.z']);
+    expect(map.get('typeY')).to.deep.equal(['a.b.y']);
+    expect(map.has('unknown')).to.equal(false);
+  });
+
+  it('Returns an empty map for an empty schema or non-object entries', () => {
+    expect(buildDataPointTypeIdToPathsMap({}).size).to.equal(0);
+    expect(buildDataPointTypeIdToPathsMap({ a: 'text', b: [1] }).size).to.equal(0);
   });
 });

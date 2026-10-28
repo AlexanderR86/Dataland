@@ -29,6 +29,33 @@ export function getDataPointTypeIdAtPath(schema: object, path: string): string |
 }
 
 /**
+ * Maps every data point type id of a parsed framework schema to the paths where it is used.
+ * @param schema the parsed framework schema
+ * @returns a map from data point type id to its dot-separated paths in schema order
+ */
+export function buildDataPointTypeIdToPathsMap(schema: object): Map<string, string[]> {
+  const pathsByTypeId = new Map<string, string[]>();
+  collectDataPointPaths(schema, '', pathsByTypeId);
+  return pathsByTypeId;
+}
+
+/**
+ * Recursively collects the paths of all data point references below a schema object.
+ */
+function collectDataPointPaths(schema: object, parentPath: string, pathsByTypeId: Map<string, string[]>): void {
+  for (const [key, value] of Object.entries(schema)) {
+    if (!isSchemaObject(value)) continue;
+    const path = parentPath ? `${parentPath}.${key}` : key;
+    if (isDataPointReference(value)) {
+      const typeId = value.id as string;
+      pathsByTypeId.set(typeId, [...(pathsByTypeId.get(typeId) ?? []), path]);
+    } else {
+      collectDataPointPaths(value, path, pathsByTypeId);
+    }
+  }
+}
+
+/**
  * Lists the keys of all ancestors of a path, e.g. "a.b.c" yields ["a", "a.b"].
  * @param path the dot-separated path
  * @returns the keys of the ancestors, from the root downwards
